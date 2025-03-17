@@ -13,11 +13,20 @@ fn circuit(fname: &str) -> Circuit {
     Circuit::parse(BufReader::new(File::open(fname).unwrap())).unwrap()
 }
 
-fn run_circuit(circ: &mut Circuit, gb_inputs: Vec<u16>, ev_inputs: Vec<u16>) {
+/// Converts a Vec<bool> to Vec<u16> where false -> 0 and true -> 1.
+fn bools_to_u16(bits: Vec<bool>) -> Vec<u16> {
+    bits.into_iter().map(|b| if b { 1 } else { 0 }).collect()
+}
+
+/// Run the circuit using bool inputs (each bool representing a bit)
+fn run_circuit(circ: &mut Circuit, gb_inputs: Vec<bool>, ev_inputs: Vec<bool>) {
+    // Convert bools to u16 bits.
+    let gb_inputs_u16 = bools_to_u16(gb_inputs);
+    let ev_inputs_u16 = bools_to_u16(ev_inputs);
     let circ_ = circ.clone();
     let (sender, receiver) = unix_channel_pair();
-    let n_gb_inputs = gb_inputs.len();
-    let n_ev_inputs = ev_inputs.len();
+    let n_gb_inputs = gb_inputs_u16.len();
+    let n_ev_inputs = ev_inputs_u16.len();
     let total = SystemTime::now();
     let handle = std::thread::spawn(move || {
         let rng = AesRng::new();
@@ -28,7 +37,9 @@ fn run_circuit(circ: &mut Circuit, gb_inputs: Vec<u16>, ev_inputs: Vec<u16>) {
             start.elapsed().unwrap().as_millis()
         );
         let start = SystemTime::now();
-        let xs = gb.encode_many(&gb_inputs, &vec![2; n_gb_inputs]).unwrap();
+        let xs = gb
+            .encode_many(&gb_inputs_u16, &vec![2; n_gb_inputs])
+            .unwrap();
         let ys = gb.receive_many(&vec![2; n_ev_inputs]).unwrap();
         println!(
             "Garbler :: Encoding inputs: {} ms",
@@ -51,13 +62,16 @@ fn run_circuit(circ: &mut Circuit, gb_inputs: Vec<u16>, ev_inputs: Vec<u16>) {
     );
     let start = SystemTime::now();
     let xs = ev.receive_many(&vec![2; n_gb_inputs]).unwrap();
-    let ys = ev.encode_many(&ev_inputs, &vec![2; n_ev_inputs]).unwrap();
+    let ys = ev
+        .encode_many(&ev_inputs_u16, &vec![2; n_ev_inputs])
+        .unwrap();
     println!(
         "Evaluator :: Encoding inputs: {} ms",
         start.elapsed().unwrap().as_millis()
     );
     let start = SystemTime::now();
-    circ.eval(&mut ev, &xs, &ys).unwrap();
+    let result = circ.eval(&mut ev, &xs, &ys).unwrap();
+    println!("result: {:?}", result.expect("evaluation failed"));
     println!(
         "Evaluator :: Circuit evaluation: {} ms",
         start.elapsed().unwrap().as_millis()
@@ -66,11 +80,19 @@ fn run_circuit(circ: &mut Circuit, gb_inputs: Vec<u16>, ev_inputs: Vec<u16>) {
     println!("Total: {} ms", total.elapsed().unwrap().as_millis());
 }
 
+fn one() -> Vec<bool> {
+    let mut bits = vec![false; 16];
+    bits[0] = true; // least-significant bit = 1
+    bits
+}
+
 fn main() {
-    let mut circ = circuit("circuits/AES-non-expanded.txt");
-    run_circuit(&mut circ, vec![0; 128], vec![0; 128]);
-    let mut circ = circuit("circuits/sha-1.txt");
-    run_circuit(&mut circ, vec![0; 512], vec![]);
-    let mut circ = circuit("circuits/sha-256.txt");
-    run_circuit(&mut circ, vec![0; 512], vec![]);
+    // let mut circ = circuit("circuits/AES-non-expanded.txt");
+    // run_circuit(&mut circ, vec![0; 128], vec![0; 128]);
+    // let mut circ = circuit("circuits/sha-1.txt");
+    // run_circuit(&mut circ, vec![0; 512], vec![0; 512]);
+    // let mut circ = circuit("circuits/sha-256.txt");
+    // run_circuit(&mut circ, vec![0; 512], vec![0; 512]);
+    let mut circ = circuit("circuits/simple_add.txt");
+    run_circuit(&mut circ, one(), one());
 }

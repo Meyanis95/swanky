@@ -1,7 +1,7 @@
 //! Implementation of semi-honest two-party computation.
 
 mod evaluator;
-mod garbler;
+pub mod garbler;
 
 pub use evaluator::Evaluator;
 pub use garbler::Garbler;

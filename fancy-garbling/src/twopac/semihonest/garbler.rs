@@ -1,3 +1,9 @@
+//! This module provides an extension trait for the semihonest garbler.
+//! The `GarblerExt` trait adds a convenient `garble` method that generates
+//! garbled data (including labels for the garbler and evaluator) for a given circuit.
+//!
+//! It also defines the [`GarbledData`] struct that encapsulates the generated labels.
+//!
 use crate::{
     errors::TwopacError, wire::WireLabel, AllWire, ArithmeticWire, Fancy, FancyArithmetic,
     FancyBinary, FancyInput, FancyReveal, Garbler as Gb, WireMod2,

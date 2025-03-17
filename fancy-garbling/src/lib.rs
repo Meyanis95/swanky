@@ -11,6 +11,7 @@ pub mod dummy;
 pub mod errors;
 mod fancy;
 mod garble;
+pub mod garble_ext;
 pub mod informer;
 mod parser;
 pub mod twopac;
