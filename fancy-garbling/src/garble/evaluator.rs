@@ -19,7 +19,8 @@ use super::security_warning::warn_proj;
 /// Evaluates a garbled circuit on the fly, using messages containing ciphertexts and
 /// wires. Parallelizable.
 pub struct Evaluator<C, Wire> {
-    pub(crate) channel: C,
+    /// Evaluator channel
+    pub channel: C,
     current_gate: usize,
     current_output: usize,
     _phantom: PhantomData<Wire>,

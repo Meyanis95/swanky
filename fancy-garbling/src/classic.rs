@@ -168,6 +168,18 @@ impl<Wire: WireLabel> Encoder<Wire> {
             .map(|(id, &x)| self.encode_evaluator_input(x, id))
             .collect()
     }
+
+    /// Return the Wire's label pairs.
+    pub fn get_evaluator_label_pairs(&self) -> Vec<(Wire, Wire)> {
+        self.evaluator_inputs
+            .iter()
+            .map(|zero| {
+                let q = zero.modulus();
+                let delta = &self.deltas[&q];
+                (zero.clone(), zero.plus(delta))
+            })
+            .collect()
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

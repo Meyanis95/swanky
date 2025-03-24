@@ -17,7 +17,8 @@ use super::security_warning::warn_proj;
 
 /// Streams garbled circuit ciphertexts through a callback.
 pub struct Garbler<C, RNG, Wire> {
-    pub(crate) channel: C,
+    /// Channel used for transmitting garbled circuit ciphertexts.
+    pub channel: C,
     deltas: HashMap<u16, Wire>, // map from modulus to associated delta wire-label.
     current_output: usize,
     current_gate: usize,
